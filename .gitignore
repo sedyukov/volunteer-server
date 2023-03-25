@@ -1,0 +1,73 @@
+# CMake generated files and directories
+CMakeCache.txt
+CMakeFiles
+cmake-build-*
+cmake_install.cmake
+install_manifest.txt
+
+# Object files
+*.slo
+*.lo
+*.o
+*.obj
+*.ko
+*.elf
+
+# Compiled dynamic libraries
+*.so
+*.so.*
+*.dylib
+*.dll
+
+# Compiled static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Precompiled headers
+*.gch
+*.pch
+
+# Binaries
+*.exe
+*.exe~
+*.out
+*.app
+*.jar
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+__debug_bin
+
+# Test binary, build with `go test -c`
+_obj
+_test
+*.test
+*.prof
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# The project related ignores
+.bin
+.build
+.config
+.dev
+.env
+.idea
+.stash
+.vscode
+build
+cmd/parser/.env
+cmd/gateway/.env
+
+# Other
+.DS_Store
+
+# DBs
+cmd/gateway/config-centralized.json.gz
+cmd/gateway/domains.json.gz
