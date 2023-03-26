@@ -72,3 +72,6 @@ cmd/server/config-external.json.gz
 cmd/server/ct-domains.json.gz
 cmd/server/refused.json.gz
 cmd/server/config.json.gz
+
+# binaries
+server
