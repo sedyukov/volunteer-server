@@ -2,14 +2,23 @@ package main
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/spf13/viper"
+
+	"github.com/sedyukov/volunteer-server/internal/common"
 	"github.com/sedyukov/volunteer-server/internal/remote"
 	"github.com/sedyukov/volunteer-server/internal/routes"
 	"github.com/sedyukov/volunteer-server/internal/service"
 	"github.com/sedyukov/volunteer-server/internal/storage"
-	"github.com/spf13/viper"
 )
 
 func bootstrapApp() {
+	// Get port from config
+	var port = viper.GetString("SERVER_PORT")
+	common.Port = port
+
+	var peerUrl = viper.GetString("PEER_URL")
+	common.PeerUrl = peerUrl
+
 	// Start logger service
 	logger, err := service.NewLogger("volunteer-server", service.LoggerConfig{
 		OutOnly: true,
@@ -31,21 +40,32 @@ func bootstrapApp() {
 	// Init remote package
 	remote.Init(logger)
 
-	// Fetch and save config
-	config, err := remote.GetCentralizedConfig()
+	// Fetch and save centralized config
+	config, err := remote.GetExternalConfig()
 	if err != nil {
 		logger.Error().Msg("Retrieving config failed")
 		panic(err)
 	}
 
-	storage.SaveCentralizedConfig(config, logger)
+	storage.SaveExternalConfig(config, logger)
 	logger.Info().Msg("Config initialization finished")
 
 	// Fetch and save ct-domains
 	domains, err := remote.GetCtDomains()
 	if err != nil {
 		logger.Error().Msg("Retrieving ct-domains failed")
-		panic(err)
+
+		if remote.IsCentralizedFetching() {
+			domains, err = remote.GetCtDomainsFromPeer()
+
+			if err != nil {
+				logger.Error().Msg("Retrieving ct-domains from peer failed")
+				panic(err)
+			}
+		} else {
+			panic(err)
+		}
+
 	}
 
 	storage.SetCtDomains(domains)
@@ -55,7 +75,17 @@ func bootstrapApp() {
 	refused, err := remote.GetRefused()
 	if err != nil {
 		logger.Error().Msg("Retrieving refused failed")
-		panic(err)
+
+		if remote.IsCentralizedFetching() {
+			refused, err = remote.GetRefusedFromPeer()
+
+			if err != nil {
+				logger.Error().Msg("Retrieving refused from peer failed")
+				panic(err)
+			}
+		} else {
+			panic(err)
+		}
 	}
 
 	storage.SetRefused(refused)
@@ -69,11 +99,14 @@ func bootstrapApp() {
 	}
 	logger.Info().Msgf("Your public ip: %s", remote.GetPubleIp())
 
+	// Convert and save own config
+	ownConfig := remote.GetOwnConfig()
+	storage.SaveOwnConfig(ownConfig, logger)
+	logger.Info().Msg("Own config initialization finished")
+
 	// Setup gateway routes
 	routes.SetupGatewayRoutes(app)
 
-	// Listening for requests
-	var port = viper.GetString("GATEWAY_PORT")
-	logger.Info().Msgf("Listening to port %v", port)
+	logger.Info().Msgf("Listening to port %v", common.Port)
 	app.Listen(":" + port)
 }

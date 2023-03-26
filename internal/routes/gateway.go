@@ -7,15 +7,17 @@ import (
 )
 
 var (
-	getRefusedRoute   = "/api/v3/disseminators/refused"
-	getCtDomainsRoute = "/api/v3/ct-domains/"
-	getConfigRoute    = "/api/centralized-config"
+	getRefusedRoute        = "/api/v3/disseminators/refused"
+	getCtDomainsRoute      = "/api/v3/ct-domains/"
+	getExternalConfigRoute = "/api/centralized-config"
+	getOwnConfigRoute      = "/api/config"
 )
 
 func SetupGatewayRoutes(app *fiber.App) {
 	app.Get(getRefusedRoute, controllers.GetRefused)
 	app.Get(getCtDomainsRoute, controllers.GetCtDomains)
-	app.Get(getConfigRoute, controllers.GetCentralizedConfig)
+	app.Get(getExternalConfigRoute, controllers.GetexternalConfig)
+	app.Get(getOwnConfigRoute, controllers.GetOwnConfig)
 }
 
 func GetRefusedRoute() string {
@@ -24,4 +26,8 @@ func GetRefusedRoute() string {
 
 func GetCtDomainsRoute() string {
 	return getCtDomainsRoute
+}
+
+func GetExternalConfigRoute() string {
+	return getExternalConfigRoute
 }

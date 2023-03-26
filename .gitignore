@@ -69,6 +69,7 @@ cmd/gateway/.env
 .DS_Store
 
 # DBs
-cmd/server/config-centralized.json.gz
+cmd/server/config-external.json.gz
 cmd/server/ct-domains.json.gz
 cmd/server/refused.json.gz
+cmd/server/config.json.gz

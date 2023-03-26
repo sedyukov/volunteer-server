@@ -9,14 +9,61 @@ import (
 )
 
 var (
-	centralizedConfigStorageName = "config-centralized.json.gz"
-	centralizeConfigKey          = "config-centralized"
+	externalConfigStorageName = "config-external.json.gz"
+	externalConfigKey         = "config-external"
+	ownConfigStorageName      = "config.json.gz"
+	ownConfigKey              = "config"
 )
 
-func SaveCentralizedConfig(config common.ConfigResponse, logger zerolog.Logger) error {
+func SaveExternalConfig(config common.ConfigResponse, logger zerolog.Logger) error {
 	ks := new(jsonstore.JSONStore)
 
-	err := ks.Set(centralizeConfigKey, config)
+	err := ks.Set(externalConfigKey, config)
+	if err != nil {
+		logger.Error().Msg("Setting external config to storage failed")
+		return err
+	}
+
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() error {
+		defer wg.Done()
+
+		err := jsonstore.Save(ks, externalConfigStorageName)
+		if err != nil {
+			logger.Error().Msg("Saving external config to storage failed")
+			return err
+		}
+
+		return nil
+	}()
+	wg.Wait()
+
+	return nil
+}
+
+func GetExternalConfig() common.ConfigResponse {
+	var config common.ConfigResponse
+
+	ks, err := jsonstore.Open(externalConfigStorageName)
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = ks.Get(externalConfigKey, &config)
+	if err != nil {
+		panic(err)
+	}
+
+	return config
+}
+
+func SaveOwnConfig(config common.ConfigResponse, logger zerolog.Logger) error {
+	ks := new(jsonstore.JSONStore)
+
+	err := ks.Set(ownConfigKey, config)
 	if err != nil {
 		logger.Error().Msg("Setting centralized config to storage failed")
 		return err
@@ -28,7 +75,7 @@ func SaveCentralizedConfig(config common.ConfigResponse, logger zerolog.Logger) 
 	go func() error {
 		defer wg.Done()
 
-		err := jsonstore.Save(ks, centralizedConfigStorageName)
+		err := jsonstore.Save(ks, ownConfigStorageName)
 		if err != nil {
 			logger.Error().Msg("Saving centralized config to storage failed")
 			return err
@@ -41,16 +88,16 @@ func SaveCentralizedConfig(config common.ConfigResponse, logger zerolog.Logger) 
 	return nil
 }
 
-func GetCentralizedConfig() common.ConfigResponse {
+func GetOwnConfig() common.ConfigResponse {
 	var config common.ConfigResponse
 
-	ks, err := jsonstore.Open(centralizedConfigStorageName)
+	ks, err := jsonstore.Open(ownConfigStorageName)
 
 	if err != nil {
 		panic(err)
 	}
 
-	err = ks.Get(centralizeConfigKey, &config)
+	err = ks.Get(ownConfigKey, &config)
 	if err != nil {
 		panic(err)
 	}

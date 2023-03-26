@@ -59,12 +59,12 @@ func getRefusedDomainUrl(config common.ConfigResponse) (string, error) {
 	return "", errors.New("CtDomains url not found")
 }
 
-func PrepareOwnConfig() {
-	convertedConfig := ConvertConfig(publicIp, centralizedConfig)
+func GetOwnConfig() common.ConfigResponse {
+	convertedConfig := ConvertConfig(publicIp, externalConfig)
+	return convertedConfig
 }
 
 func ConvertConfig(host string, config common.ConfigResponse) common.ConfigResponse {
-	// TODO: implement logic to build config based on own ip
 	var convertedConfig common.ConfigResponse
 
 	convertedConfig.Meta = config.Meta
@@ -77,10 +77,10 @@ func ConvertConfig(host string, config common.ConfigResponse) common.ConfigRespo
 		tmp = value
 
 		if value.CountryCode == russiaConrtyCode {
-			tmp.RegistryURL = getOwnCtDomainsEndpoint(host)
+			tmp.RegistryURL = getOwnCtDomainsEndpoint()
 		}
 
-		tmp.Specifics.CooperationRefusedORIURL = getOwnRefusedEndpoint(host)
+		tmp.Specifics.CooperationRefusedORIURL = getOwnRefusedEndpoint()
 
 		convertedConfig.Data = append(convertedConfig.Data, tmp)
 	}
@@ -107,10 +107,31 @@ func IdentifyPublicIp() error {
 	return nil
 }
 
-func getOwnRefusedEndpoint(host string) string {
-	return "http://" + host + routes.GetRefusedRoute()
+func getOwnRefusedEndpoint() string {
+	return getRefusedEndpoint(GetOwnIpWithPort())
 }
 
-func getOwnCtDomainsEndpoint(host string) string {
-	return "http://" + host + routes.GetCtDomainsRoute()
+func getRefusedEndpoint(url string) string {
+	return url + routes.GetRefusedRoute()
+}
+
+func getOwnCtDomainsEndpoint() string {
+	return getCtDomainsEndpoint(GetOwnIpWithPort())
+}
+
+func getCtDomainsEndpoint(url string) string {
+	return url + routes.GetCtDomainsRoute()
+}
+
+func getConfigPeerEndpoint(url string) string {
+	return url + routes.GetExternalConfigRoute()
+}
+func GetOwnIpWithPort() string {
+	hostWithProtocol := "http://" + publicIp
+
+	if common.Port == "80" {
+		return hostWithProtocol
+	}
+
+	return hostWithProtocol + ":" + common.Port
 }
