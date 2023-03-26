@@ -33,7 +33,7 @@ func fetchExternalConfig() (common.ConfigResponse, error) {
 		return *resp, nil
 	}
 
-	logger.Info().Msg("Failed configUrlAmazonS3")
+	logger.Error().Msg("Failed configUrlAmazonS3")
 
 	err = getJson(configUrlAmazonCloudfront, resp)
 
@@ -41,7 +41,7 @@ func fetchExternalConfig() (common.ConfigResponse, error) {
 		return *resp, nil
 	}
 
-	logger.Info().Msg("Failed configUrlAmazonGoogleApis")
+	logger.Error().Msg("Failed configUrlAmazonCloudfront")
 
 	err = getJson(configUrlAmazonGoogleApis, resp)
 
@@ -49,7 +49,7 @@ func fetchExternalConfig() (common.ConfigResponse, error) {
 		return *resp, nil
 	}
 
-	logger.Info().Msg("Failed configUrlAmazonGoogleApis")
+	logger.Error().Msg("Failed configUrlAmazonGoogleApis")
 
 	// p2p config fetching
 	centralizedFetching = false

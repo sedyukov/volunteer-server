@@ -62,8 +62,7 @@ _test
 .stash
 .vscode
 build
-cmd/parser/.env
-cmd/gateway/.env
+cmd/server/.env
 
 # Other
 .DS_Store
