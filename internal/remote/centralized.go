@@ -1,7 +1,6 @@
 package remote
 
 import (
-	"github.com/rs/zerolog"
 	"github.com/sedyukov/volunteer-server/internal/common"
 )
 
@@ -12,13 +11,15 @@ var (
 	configUrlAmazonGoogleApis = "https://storage.googleapis.com/censortracker/config.json"
 )
 
-func GetCentralizedConfig(logger zerolog.Logger) (common.ConfigResponse, error) {
+func GetCentralizedConfig() (common.ConfigResponse, error) {
 	resp, err := fetchCentralizedConfig()
 
 	if err != nil {
 		logger.Error().Msg("Faild while fetching config from centralized server")
 		return resp, err
 	}
+
+	centralizedConfig = resp
 
 	return resp, nil
 }
@@ -45,4 +46,44 @@ func fetchCentralizedConfig() (common.ConfigResponse, error) {
 	}
 
 	return *resp, err
+}
+
+// for now it's only for Russia
+func GetCtDomains() ([]string, error) {
+	url, err := getCtDomainUrl(centralizedConfig)
+
+	if err != nil {
+		logger.Error().Msg("Faild while getting ct domain url")
+		return nil, err
+	}
+
+	resp := new([]string)
+
+	err = getJson(url, resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return *resp, nil
+}
+
+// currently is the same for all countries (so now will take for Russia)
+func GetRefused() ([]common.Refused, error) {
+	url, err := getRefusedDomainUrl(centralizedConfig)
+
+	if err != nil {
+		logger.Error().Msg("Faild while getting refused domain url")
+		return nil, err
+	}
+
+	resp := new([]common.Refused)
+
+	err = getJson(url, resp)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return *resp, nil
 }

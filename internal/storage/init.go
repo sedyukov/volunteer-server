@@ -3,7 +3,12 @@ package storage
 import "github.com/rs/zerolog"
 
 func Init(logger zerolog.Logger) error {
-	err := initDomainsStorage(logger)
+	err := initRefusedStorage(logger)
+	if err != nil {
+		return err
+	}
+
+	err = initCtDomainsStorage(logger)
 	if err != nil {
 		return err
 	}

@@ -1,10 +1,10 @@
 .PHONY: start
 
 build:
-	(go build ./cmd/gateway)
+	(go build ./cmd/server)
 
 start:
-	(cd ./cmd/gateway && go run .)
+	(cd ./cmd/server && go run .)
 
 lint:
 	golangci-lint run

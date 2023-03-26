@@ -2,18 +2,17 @@ package remote
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	"github.com/sedyukov/volunteer-server/internal/common"
+	"github.com/sedyukov/volunteer-server/internal/routes"
 )
 
 type IP struct {
 	Query string
 }
-
-var client = &http.Client{Timeout: 10 * time.Second}
 
 func getJson(url string, target interface{}) error {
 	r, err := client.Get(url)
@@ -36,8 +35,57 @@ func GetLocalesFromConfig(config common.ConfigResponse) []string {
 	return locales
 }
 
-func MakeOwnConfig() {
+func getCtDomainUrl(config common.ConfigResponse) (string, error) {
+	dataArray := config.Data
+
+	for _, value := range dataArray {
+		if value.CountryCode == russiaConrtyCode {
+			return value.RegistryURL, nil
+		}
+	}
+
+	return "", errors.New("CtDomains url not found")
+}
+
+func getRefusedDomainUrl(config common.ConfigResponse) (string, error) {
+	dataArray := config.Data
+
+	for _, value := range dataArray {
+		if value.CountryCode == russiaConrtyCode {
+			return value.Specifics.CooperationRefusedORIURL, nil
+		}
+	}
+
+	return "", errors.New("CtDomains url not found")
+}
+
+func PrepareOwnConfig() {
+	convertedConfig := ConvertConfig(publicIp, centralizedConfig)
+}
+
+func ConvertConfig(host string, config common.ConfigResponse) common.ConfigResponse {
 	// TODO: implement logic to build config based on own ip
+	var convertedConfig common.ConfigResponse
+
+	convertedConfig.Meta = config.Meta
+
+	dataArray := config.Data
+
+	for _, value := range dataArray {
+		var tmp common.Data
+
+		tmp = value
+
+		if value.CountryCode == russiaConrtyCode {
+			tmp.RegistryURL = getOwnCtDomainsEndpoint(host)
+		}
+
+		tmp.Specifics.CooperationRefusedORIURL = getOwnRefusedEndpoint(host)
+
+		convertedConfig.Data = append(convertedConfig.Data, tmp)
+	}
+
+	return convertedConfig
 }
 
 func IdentifyPublicIp() error {
@@ -54,7 +102,15 @@ func IdentifyPublicIp() error {
 	var ip IP
 	json.Unmarshal(body, &ip)
 
-	PublicIp = ip.Query
+	publicIp = ip.Query
 
 	return nil
+}
+
+func getOwnRefusedEndpoint(host string) string {
+	return "http://" + host + routes.GetRefusedRoute()
+}
+
+func getOwnCtDomainsEndpoint(host string) string {
+	return "http://" + host + routes.GetCtDomainsRoute()
 }
